@@ -4,6 +4,7 @@ import WelcomeCard from "./components/StartGame";
 import ChatBox from "./components/ChatBox";
 import Game from "./components/Game";
 import { useState } from "react";
+import Footer from "./components/Footer";
 
 function App() {
   const [started, setStarted] = useState<boolean>(false);
@@ -103,6 +104,7 @@ function App() {
           </Slide>
         </Box>
       </Container>
+        <Footer/>
     </Box>
   );
 }

@@ -4,12 +4,6 @@ import { io, Socket } from "socket.io-client";
 import { calculateGameResult } from "./CalculateGameResult";
 
 type Player = "X" | "O" | null;
-
-interface GameResult {
-  winner: Player;
-  isDraw: boolean;
-}
-
 let socket: Socket;
 
 function Game() {
