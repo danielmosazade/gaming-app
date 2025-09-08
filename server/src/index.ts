@@ -50,6 +50,13 @@ io.on("connection", (socket) => {
     console.log(`Game reset by ${socket.id}`);
     io.emit("game_reset");
   });
+    socket.on("make_move", (data) => {
+    socket.broadcast.emit("update_board", data);
+  });
+
+  socket.on("winner", (player) => {
+    socket.broadcast.emit("winner", player);
+  });
 
   socket.on("disconnect", () => {
     console.log("User disconnected:", socket.id);

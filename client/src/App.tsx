@@ -2,9 +2,9 @@ import { Container, Box, Paper, Slide, Fade } from "@mui/material";
 import Navbar from "./components/Navbar";
 import WelcomeCard from "./components/StartGame";
 import ChatBox from "./components/ChatBox";
-import Game from "./components/Game";
 import { useState } from "react";
 import Footer from "./components/Footer";
+import GameSelector from "./components/GameSelector";
 
 function App() {
   const [started, setStarted] = useState<boolean>(false);
@@ -73,7 +73,7 @@ function App() {
                   },
                 }}
               >
-                <Game />
+                <GameSelector/>
               </Paper>
             </Fade>
           </Slide>

@@ -6,24 +6,32 @@ import { calculateGameResult } from "./CalculateGameResult";
 type Player = "X" | "O" | null;
 let socket: Socket;
 
-function Game() {
+interface TicTacToeProps {
+  onBackToMenu: () => void;
+}
+
+function TicTacToe({ onBackToMenu }: TicTacToeProps) {
   const [board, setBoard] = useState<Player[]>(Array(9).fill(null));
   const [xIsNext, setXIsNext] = useState<boolean>(true);
   const [winner, setWinner] = useState<Player>(null);
   const [isDraw, setIsDraw] = useState<boolean>(false);
 
+  // חיבור ל-socket
   useEffect(() => {
     socket = io("http://localhost:5000");
 
     socket.on("move_made", (data: { index: number; player: "X" | "O" }) => {
-      const newBoard = [...board];
-      newBoard[data.index] = data.player;
-      setBoard(newBoard);
-      setXIsNext(data.player === "X" ? false : true);
+      setBoard((prevBoard) => {
+        const newBoard = [...prevBoard];
+        newBoard[data.index] = data.player;
 
-      const result = calculateGameResult(newBoard);
-      setWinner(result.winner);
-      setIsDraw(result.isDraw);
+        const result = calculateGameResult(newBoard);
+        setWinner(result.winner);
+        setIsDraw(result.isDraw);
+
+        setXIsNext(data.player === "X" ? false : true);
+        return newBoard;
+      });
     });
 
     socket.on("game_reset", () => {
@@ -33,8 +41,9 @@ function Game() {
     return () => {
       socket.disconnect();
     };
-  }, [board]);
+  }, []);
 
+  // טיפול בלחיצה על תא
   const handleClick = (index: number) => {
     if (board[index] || winner || isDraw) return;
 
@@ -42,15 +51,17 @@ function Game() {
     const newBoard = [...board];
     newBoard[index] = player;
     setBoard(newBoard);
-    setXIsNext(!xIsNext);
 
     const result = calculateGameResult(newBoard);
     setWinner(result.winner);
     setIsDraw(result.isDraw);
 
+    setXIsNext(!xIsNext);
+
     socket.emit("make_move", { index, player });
   };
 
+  // אתחול המשחק
   const resetGame = () => {
     setBoard(Array(9).fill(null));
     setXIsNext(true);
@@ -75,10 +86,13 @@ function Game() {
   );
 
   return (
-    <Box>
+    <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
+      {/* לוח המשחק */}
       <Box display="grid" gridTemplateColumns="repeat(3, 1fr)" gap={1}>
         {board.map((_, i) => renderSquare(i))}
       </Box>
+
+      {/* הודעות תור / מנצח / תיקו */}
       <Box mt={2} textAlign="center">
         {winner ? (
           <Typography variant="h6" color="secondary">
@@ -94,13 +108,20 @@ function Game() {
           </Typography>
         )}
       </Box>
-      <Box mt={2} textAlign="center">
-        <Button variant="contained" color="secondary" onClick={sendReset}>
-          Reset Game
-        </Button>
-      </Box>
+
+      {/* כפתורים בסיום המשחק */}
+      {(winner !== null || isDraw) && (
+        <Box display="flex" gap={2} mt={2}>
+          <Button variant="contained" color="primary" onClick={sendReset}>
+            משחק חדש
+          </Button>
+          <Button variant="outlined" color="secondary" onClick={onBackToMenu}>
+            חזור לתפריט
+          </Button>
+        </Box>
+      )}
     </Box>
   );
 }
 
-export default Game;
+export default TicTacToe;
