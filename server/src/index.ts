@@ -1,9 +1,12 @@
-// server/src/index.ts
+
 import express, { Response, Request } from "express";
 import http from "http";
 import { Server } from "socket.io";
 import cors from "cors";
 import dotenv from "dotenv";
+import { handleTicTacToe } from "./socket/TicTacToe";
+import  handleChat  from "./socket/Chat";
+
 
 dotenv.config();
 
@@ -28,36 +31,10 @@ app.get("/", (_req: Request, res: Response) => {
 
 io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
-  socket.emit("welcome", "ברוך הבא למשחק!");
-
-  socket.on("send_message", (msgText: string) => {
-  const message = {
-    id: Math.random().toString(36).slice(2, 10),
-    text: msgText,
-    // senderId: socket.id,
-    time: new Date().toLocaleTimeString(),
-  };
-
-  io.emit("receive_message", message);
-});
-  socket.on("make_move", (data: { index: number; player: "X" | "O" }) => {
-    console.log(`Move from ${socket.id}:`, data);
-    io.emit("move_made", data); // שולח לכולם את המהלך
-  });
-
-  // ✅ אירוע איפוס המשחק
-  socket.on("reset_game", () => {
-    console.log(`Game reset by ${socket.id}`);
-    io.emit("game_reset");
-  });
-    socket.on("make_move", (data) => {
-    socket.broadcast.emit("update_board", data);
-  });
-
-  socket.on("winner", (player) => {
-    socket.broadcast.emit("winner", player);
-  });
-
+  handleChat(socket, io);
+ socket.on("send_message", (msg) => {
+    console.log(socket.id, "sent message:", msg);
+ })
   socket.on("disconnect", () => {
     console.log("User disconnected:", socket.id);
   });

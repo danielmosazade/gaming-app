@@ -4,7 +4,7 @@ import WelcomeCard from "./components/StartGame";
 import ChatBox from "./components/ChatBox";
 import { useState } from "react";
 import Footer from "./components/Footer";
-import GameSelector from "./components/GameSelector";
+import GameMenu from "./components/GameMenu";
 
 function App() {
   const [started, setStarted] = useState<boolean>(false);
@@ -25,7 +25,6 @@ function App() {
             gap: 4,
           }}
         >
-          {/* צד שמאל - WelcomeCard או המשחק */}
           <Slide direction="right" in={!started} mountOnEnter unmountOnExit>
             <Fade in={!started} timeout={500}>
               <Paper
@@ -73,7 +72,7 @@ function App() {
                   },
                 }}
               >
-                <GameSelector/>
+                <GameMenu onBackToMenu={() => setStarted(false)} />
               </Paper>
             </Fade>
           </Slide>
@@ -104,7 +103,7 @@ function App() {
           </Slide>
         </Box>
       </Container>
-        <Footer/>
+      <Footer />
     </Box>
   );
 }

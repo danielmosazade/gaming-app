@@ -1,7 +1,7 @@
 import { Box, Button, Typography } from "@mui/material";
 import { useState, useEffect } from "react";
 import { io, Socket } from "socket.io-client";
-import { calculateGameResult } from "./CalculateGameResult";
+import { calculateGameResult } from "../components/CalculateGameResult";
 
 type Player = "X" | "O" | null;
 let socket: Socket;

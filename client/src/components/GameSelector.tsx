@@ -1,8 +1,8 @@
 import { Box } from "@mui/material";
 import { useState } from "react";
 import GameIcon from "./GameIcon";
-import TicTacToe from "./TicTacToe";
-import Connect4 from "./Connect4";
+import TicTacToe from "../pages/TicTacToe";
+import Connect4 from "../pages/Connect4";
 
 const GameSelector = () => {
   const [selectedGame, setSelectedGame] = useState<string | null>(null);

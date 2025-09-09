@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Box, Paper, Typography } from "@mui/material";
-import GameOver from "./GameOver";
+import GameOver from "../components/GameOver";
 
 type Cell = null | "red" | "yellow";
 
