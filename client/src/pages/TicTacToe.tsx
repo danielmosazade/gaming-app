@@ -37,6 +37,8 @@ function TicTacToe({ onBackToMenu }: TicTacToeProps) {
     socket.on("game_reset", () => {
       resetGame();
     });
+   
+
 
     return () => {
       socket.disconnect();
@@ -58,7 +60,7 @@ function TicTacToe({ onBackToMenu }: TicTacToeProps) {
 
     setXIsNext(!xIsNext);
 
-    socket.emit("make_move", { index, player });
+    socket.emit("tic_move", { index, player });
   };
 
   // אתחול המשחק

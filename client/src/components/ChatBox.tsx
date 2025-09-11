@@ -8,7 +8,7 @@ const socket: Socket = io("http://localhost:5000");
 interface Message {
   id: string;
   text: string;
-  senderId?: string; // אופציונלי, אפשר לשים socket.id
+  senderId?: string; 
   time?: string;
 }
 
@@ -22,27 +22,26 @@ const ChatBox = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chat]);
 
-  // התחברות והאזנה להודעות
-  // useEffect(() => {
+  useEffect(() => {
     socket.on("connect", () => {
       console.log("✅ Connected to server:", socket.id);
     });
 
     socket.on("receive_message", (msg: Message) => {
-      // חשוב: תמיד לוודא שמדובר במחרוזת
       if (msg && typeof msg.text === "string") {
         setChat((prev) => [...prev, msg]);
       }
     });
 
-    // return () => {
-    //   socket.off("receive_message");
-    // };
-  // }, []);
+    return () => {
+      socket.off("connect");
+      socket.off("receive_message");
+    };
+  }, []);
 
   const sendMessage = () => {
     console.log(socket.id);
-    
+
     if (message.trim() === "") return;
 
     const msg: Message = {
@@ -53,7 +52,6 @@ const ChatBox = () => {
     };
 
     socket.emit("send_message", msg);
-    setChat((prev) => [...prev, msg]); // גם מקומית
     setMessage("");
   };
 
@@ -75,7 +73,9 @@ const ChatBox = () => {
           <Box
             key={msg.id}
             display="flex"
-            justifyContent={msg.senderId === socket.id ? "flex-end" : "flex-start"}
+            justifyContent={
+              msg.senderId === socket.id ? "flex-end" : "flex-start"
+            }
             mb={1.5}
           >
             <Paper
@@ -84,7 +84,8 @@ const ChatBox = () => {
                 maxWidth: "70%",
                 p: 1.5,
                 borderRadius: 3,
-                bgcolor: msg.senderId === socket.id ? "primary.main" : "grey.200",
+                bgcolor:
+                  msg.senderId === socket.id ? "primary.main" : "grey.200",
                 color: msg.senderId === socket.id ? "white" : "black",
               }}
             >

@@ -1,7 +1,6 @@
 import { Server, Socket } from "socket.io";
 
-export  default function handleChat(socket: Socket, io: Server) {
-    console.log("first")
+export  function handleChat(socket: Socket, io: Server) {
   socket.on("send_message", (msg) => {
     console.log(socket.id, "sent message:", msg); 
 

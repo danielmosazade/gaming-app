@@ -24,7 +24,7 @@ app.get("/", (_req, res) => {
     res.send("server is running");
 });
 io.on("connection", (socket) => {
-    console.log("User connected:", socket.id);
+    console.log("User cosadsnnected:", socket.id);
     socket.emit("welcome", "ברוך הבא למשחק!");
     socket.on("send_message", (msgText) => {
         const message = {
@@ -45,7 +45,7 @@ io.on("connection", (socket) => {
         io.emit("game_reset");
     });
     socket.on("disconnect", () => {
-        console.log("User disconnected:", socket.id);
+        console.log("User zxczx:", socket.id);
     });
 });
 server.listen(PORT, () => {

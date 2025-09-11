@@ -5,7 +5,7 @@ import { Server } from "socket.io";
 import cors from "cors";
 import dotenv from "dotenv";
 import { handleTicTacToe } from "./socket/TicTacToe";
-import  handleChat  from "./socket/Chat";
+import  {handleChat}  from "./socket/Chat";
 
 
 dotenv.config();
@@ -32,9 +32,8 @@ app.get("/", (_req: Request, res: Response) => {
 io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
   handleChat(socket, io);
- socket.on("send_message", (msg) => {
-    console.log(socket.id, "sent message:", msg);
- })
+  handleTicTacToe(socket, io);
+
   socket.on("disconnect", () => {
     console.log("User disconnected:", socket.id);
   });
