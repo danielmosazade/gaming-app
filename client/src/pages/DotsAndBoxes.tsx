@@ -1,5 +1,6 @@
 import { Box, Button, Typography } from "@mui/material";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { io, Socket } from "socket.io-client";
 
 interface DotsAndBoxesProps {
   onBackToMenu: () => void;
@@ -18,6 +19,23 @@ export default function DotsAndBoxes({ onBackToMenu }: DotsAndBoxesProps) {
     1: 0,
     2: 0,
   });
+  const socketRef = useRef<Socket | null>(null);
+
+  useEffect(() => {
+    socketRef.current = io("http://localhost:5000");
+    socketRef.current.on("dots_update_board", (data: { lineKey: string; player: 1 | 2 }) => {
+      handleLineClick(data.lineKey, false);
+    });
+
+    socketRef.current.on("dots_game_reset", () => {
+      resetGame();
+    });
+
+    return () => {
+      socketRef.current?.disconnect();
+    };
+    // eslint-disable-next-line
+  }, []);
 
   const resetGame = () => {
     setLines(new Set());
@@ -26,7 +44,13 @@ export default function DotsAndBoxes({ onBackToMenu }: DotsAndBoxesProps) {
     setCurrentPlayer(1);
   };
 
-  const handleLineClick = (lineKey: string) => {
+  // ריסט דרך השרת
+  const resetGameWithServer = () => {
+    socketRef.current?.emit("dots_reset");
+    resetGame();
+  };
+
+  const handleLineClick = (lineKey: string, sendToServer: boolean = true) => {
     if (lines.has(lineKey)) return;
 
     const newLines = new Set(lines);
@@ -66,6 +90,10 @@ export default function DotsAndBoxes({ onBackToMenu }: DotsAndBoxesProps) {
     if (!completedSquare) {
       setCurrentPlayer(currentPlayer === 1 ? 2 : 1);
     }
+    // שלח לשרת רק אם זה מהלך מקומי
+    if (sendToServer && socketRef.current) {
+      socketRef.current.emit("dots_move", { lineKey, player: currentPlayer });
+    }
   };
 
   const isGameOver = Object.keys(squares).length === totalSquares;
@@ -104,132 +132,129 @@ export default function DotsAndBoxes({ onBackToMenu }: DotsAndBoxesProps) {
   };
 
   return (
-    <Box
-      display="flex"
-      flexDirection="column"
-      alignItems="center"
-      gap={2}
-      p={2}
-    >
-      <Typography variant="h4">Dots & Boxes</Typography>
+<Box display="flex" flexDirection="column" alignItems="center" gap={1} p={2}>
+  <Typography variant="h5">Dots & Boxes</Typography>
 
-      {!isGameOver ? (
-        <>
-          <Typography>
-            שחקן נוכחי: {currentPlayer === 1 ? "🟦 שחקן 1" : "🟥 שחקן 2"}
-          </Typography>
-          <Typography>
-            ניקוד – 🟦: {scores[1]} | 🟥: {scores[2]}
-          </Typography>
+  {!isGameOver ? (
+    <>
+      <Typography fontSize={14}>
+        שחקן נוכחי: {currentPlayer === 1 ? "🟦 שחקן 1" : "🟥 שחקן 2"}
+      </Typography>
+      <Typography fontSize={14}>
+        ניקוד – 🟦: {scores[1]} | 🟥: {scores[2]}
+      </Typography>
 
-          {/* לוח */}
-          <Box
-            display="grid"
-            gridTemplateColumns={`repeat(${gridSize * 2 - 1}, 24px)`}
-            gridTemplateRows={`repeat(${gridSize * 2 - 1}, 24px)`}
-            gap={0}
-          >
-            {Array.from({ length: gridSize * 2 - 1 }).map((_, row) =>
-              Array.from({ length: gridSize * 2 - 1 }).map((_, col) => {
-                // נקודה
-                if (row % 2 === 0 && col % 2 === 0) {
-                  return (
-                    <Box
-                      key={`${row}-${col}`}
-                      width={10}
-                      height={10}
-                      bgcolor="black"
-                      borderRadius="50%"
-                      mx="auto"
-                      my="auto"
-                    />
-                  );
-                }
-                // קו אופקי
-                if (row % 2 === 0 && col % 2 === 1) {
-                  const r = row / 2;
-                  const c = (col - 1) / 2;
-                  const lineKey = `${r}-${c}-H`;
-                  return (
-                    <Box
-                      key={lineKey}
-                      width={24}
-                      height={4}
-                      bgcolor={getLineColor(lineKey)}
-                      sx={{
-                        cursor: lines.has(lineKey) ? "default" : "pointer",
-                        opacity: lines.has(lineKey) ? 1 : 0.5,
-                        transition: "0.2s",
-                      }}
-                      onClick={() =>
-                        !lines.has(lineKey) && handleLineClick(lineKey)
-                      }
-                    />
-                  );
-                }
-                // קו אנכי
-                if (row % 2 === 1 && col % 2 === 0) {
-                  const r = (row - 1) / 2;
-                  const c = col / 2;
-                  const lineKey = `${r}-${c}-V`;
-                  return (
-                    <Box
-                      key={lineKey}
-                      width={4}
-                      height={24}
-                      bgcolor={getLineColor(lineKey)}
-                      sx={{
-                        cursor: lines.has(lineKey) ? "default" : "pointer",
-                        opacity: lines.has(lineKey) ? 1 : 0.5,
-                        transition: "0.2s",
-                      }}
-                      onClick={() =>
-                        !lines.has(lineKey) && handleLineClick(lineKey)
-                      }
-                    />
-                  );
-                }
-                // ריבוע
-                if (row % 2 === 1 && col % 2 === 1) {
-                  const r = (row - 1) / 2;
-                  const c = (col - 1) / 2;
-                  const squareKey = `${r}-${c}`;
-                  return (
-                    <Box
-                      key={squareKey}
-                      width={24}
-                      height={24}
-                      bgcolor={
-                        squares[squareKey]
-                          ? squares[squareKey] === 1
-                            ? "lightblue"
-                            : "lightcoral"
-                          : "transparent"
-                      }
-                      border={squares[squareKey] ? "1px solid gray" : undefined}
-                      sx={{ opacity: squares[squareKey] ? 0.7 : 1 }}
-                    />
-                  );
-                }
-                return null;
-              })
-            )}
-          </Box>
-        </>
-      ) : (
-        <>
-          <Typography variant="h5">🎉 המשחק נגמר!</Typography>
-          <Typography variant="h6">המנצח: {winner}</Typography>
-          <Box display="flex" gap={2} mt={2}>
-            <Button variant="contained" color="primary" onClick={resetGame}>
-              🔄 משחק חדש
-            </Button>
-            <Button variant="outlined" color="secondary" onClick={onBackToMenu}>
-              ↩️ חזור לתפריט
-            </Button>
-          </Box>
-        </>
-      )}
-    </Box>
+      <Box
+        display="grid"
+        gridTemplateColumns={`repeat(${gridSize * 2 - 1}, 16px)`}
+        gridTemplateRows={`repeat(${gridSize * 2 - 1}, 16px)`}
+        gap={1}
+      >
+        {Array.from({ length: gridSize * 2 - 1 }).map((_, row) =>
+          Array.from({ length: gridSize * 2 - 1 }).map((_, col) => {
+            if (row % 2 === 0 && col % 2 === 0) {
+              // נקודה
+              return (
+                <Box
+                  key={`${row}-${col}`}
+                  width={6}
+                  height={6}
+                  bgcolor="black"
+                  borderRadius="50%"
+                  mx="auto"
+                  my="auto"
+                />
+              );
+            }
+            if (row % 2 === 0 && col % 2 === 1) {
+              const r = row / 2;
+              const c = (col - 1) / 2;
+              const lineKey = `${r}-${c}-H`;
+              return (
+                <Box
+                  key={lineKey}
+                  width={16}
+                  height={3}
+                  bgcolor={getLineColor(lineKey)}
+                  sx={{
+                    cursor: lines.has(lineKey) ? "default" : "pointer",
+                    opacity: lines.has(lineKey) ? 1 : 0.5,
+                    transition: "0.2s",
+                  }}
+                  onClick={() => !lines.has(lineKey) && handleLineClick(lineKey)}
+                />
+              );
+            }
+            if (row % 2 === 1 && col % 2 === 0) {
+              const r = (row - 1) / 2;
+              const c = col / 2;
+              const lineKey = `${r}-${c}-V`;
+              return (
+                <Box
+                  key={lineKey}
+                  width={3}
+                  height={16}
+                  bgcolor={getLineColor(lineKey)}
+                  sx={{
+                    cursor: lines.has(lineKey) ? "default" : "pointer",
+                    opacity: lines.has(lineKey) ? 1 : 0.5,
+                    transition: "0.2s",
+                  }}
+                  onClick={() => !lines.has(lineKey) && handleLineClick(lineKey)}
+                />
+              );
+            }
+            if (row % 2 === 1 && col % 2 === 1) {
+              const r = (row - 1) / 2;
+              const c = (col - 1) / 2;
+              const squareKey = `${r}-${c}`;
+              return (
+                <Box
+                  key={squareKey}
+                  width={16}
+                  height={16}
+                  bgcolor={
+                    squares[squareKey]
+                      ? squares[squareKey] === 1
+                        ? "lightblue"
+                        : "lightcoral"
+                      : "transparent"
+                  }
+                  border={squares[squareKey] ? "1px solid gray" : undefined}
+                  sx={{ opacity: squares[squareKey] ? 0.7 : 1 }}
+                />
+              );
+            }
+            return null;
+          })
+        )}
+      </Box>
+
+      <Box display="flex" gap={2} mt={2}>
+        <Button variant="contained" color="primary" onClick={resetGameWithServer}>
+          🔄 משחק חדש
+        </Button>
+        <Button variant="outlined" color="secondary" onClick={onBackToMenu}>
+          ↩️ חזור לתפריט
+        </Button>
+      </Box>
+    </>
+  ) : (
+    <>
+      <Typography variant="h5">🎉 המשחק נגמר!</Typography>
+      <Typography variant="h6">המנצח: {winner}</Typography>
+      <Box display="flex" gap={2} mt={2}>
+        <Button variant="contained" color="primary" onClick={resetGameWithServer}>
+          🔄 משחק חדש
+        </Button>
+        <Button variant="outlined" color="secondary" onClick={onBackToMenu}>
+          ↩️ חזור לתפריט
+        </Button>
+      </Box>
+    </>
+  )}
+</Box>
+
+
   );
 }

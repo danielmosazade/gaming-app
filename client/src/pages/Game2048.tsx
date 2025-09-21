@@ -6,7 +6,6 @@ interface Game2048Props {
 }
 
 const GRID_SIZE = 4;
-
 type Grid = number[][];
 
 export default function Game2048({ onBackToMenu }: Game2048Props) {
@@ -39,7 +38,6 @@ export default function Game2048({ onBackToMenu }: Game2048Props) {
     return grid.map((row) => [...row]);
   }
 
-  // תזוזה
   function move(direction: "up" | "down" | "left" | "right") {
     let moved = false;
     const newGrid = cloneGrid(grid);
@@ -61,7 +59,8 @@ export default function Game2048({ onBackToMenu }: Game2048Props) {
 
     if (direction === "left" || direction === "right") {
       for (let r = 0; r < GRID_SIZE; r++) {
-        let line = direction === "left" ? newGrid[r] : [...newGrid[r]].reverse();
+        let line =
+          direction === "left" ? newGrid[r] : [...newGrid[r]].reverse();
         const merged = mergeLine(line);
         if (direction === "right") merged.reverse();
         if (!arraysEqual(merged, newGrid[r])) moved = true;
@@ -102,7 +101,6 @@ export default function Game2048({ onBackToMenu }: Game2048Props) {
     return true;
   }
 
-  // מאזין למקשים
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if (gameOver) return;
@@ -122,34 +120,41 @@ export default function Game2048({ onBackToMenu }: Game2048Props) {
   };
 
   return (
-    <Box display="flex" flexDirection="column" alignItems="center" gap={1} p={2}>
-      <Typography variant="h4">2048</Typography>
-      <Typography>Score: {score}</Typography>
+    <Box
+      display="flex"
+      flexDirection="column"
+      alignItems="center"
+      gap={1}
+      p={1}
+    >
+      <Box display="flex" alignItems="center" gap={2} >
+        <Typography variant="h5">2048</Typography>|
+        <Typography fontSize={14}>Score: {score}</Typography>
+      </Box>
 
       <Box
         sx={{
           display: "grid",
-          gridTemplateColumns: `repeat(${GRID_SIZE}, 60px)`,
-          gridTemplateRows: `repeat(${GRID_SIZE}, 60px)`,
-          gap: 4,
+          gridTemplateColumns: `repeat(${GRID_SIZE}, 40px)`,
+          gridTemplateRows: `repeat(${GRID_SIZE}, 40px)`,
+          gap: 2,
           backgroundColor: "#bbada0",
-          padding: 4,
-          borderRadius: 2,
+          padding: 3,
+          borderRadius: 1,
         }}
       >
         {grid.flat().map((cell, idx) => (
           <Paper
             key={idx}
             sx={{
-              width: 60,
-              height: 60,
+              width: 40,
+              height: 40,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               fontWeight: "bold",
-              fontSize: 24,
-              backgroundColor:
-                cell === 0 ? "#cdc1b4" : "#eee4da",
+              fontSize: 16,
+              backgroundColor: cell === 0 ? "#cdc1b4" : "#eee4da",
             }}
           >
             {cell !== 0 ? cell : ""}
@@ -158,17 +163,22 @@ export default function Game2048({ onBackToMenu }: Game2048Props) {
       </Box>
 
       {gameOver && (
-        <Typography color="error" variant="h6">
+        <Typography color="error" variant="subtitle1">
           Game Over! 💀
         </Typography>
       )}
 
-      <Box display="flex" gap={2} mt={2}>
-        <Button variant="contained" onClick={restartGame}>
-          🔄 משחק חדש
+      <Box display="flex" gap={1} mt={1}>
+        <Button variant="contained" size="small" onClick={restartGame}>
+          🔄 חדש
         </Button>
-        <Button variant="outlined" color="secondary" onClick={onBackToMenu}>
-          ↩️ חזור לתפריט
+        <Button
+          variant="outlined"
+          color="secondary"
+          size="small"
+          onClick={onBackToMenu}
+        >
+          ↩️ חזור
         </Button>
       </Box>
     </Box>
