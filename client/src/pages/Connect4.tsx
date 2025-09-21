@@ -11,8 +11,8 @@ interface Connect4Props {
 
 const ROWS = 5;
 const COLS = 6;
-const CELL_SIZE = 35 // קטן יותר
-const CELL_MARGIN = 1;  // קטן יותר
+const CELL_SIZE = 35; // קטן יותר
+const CELL_MARGIN = 1;
 
 const socket: Socket = io("http://localhost:5000");
 
@@ -103,7 +103,7 @@ const Connect4 = ({ onBackToMenu }: Connect4Props) => {
 
   return (
     <Box display="flex" flexDirection="column" alignItems="center" gap={0.5} p={0.5}>
-      <Typography variant="subtitle2" fontSize={12}>
+      <Typography variant="subtitle2" fontSize={{ xs: 10, sm: 12 }}>
         {winner ? "" : `Turn: ${turn?.toUpperCase()}`}
       </Typography>
 
@@ -115,8 +115,8 @@ const Connect4 = ({ onBackToMenu }: Connect4Props) => {
                 key={cIdx}
                 onClick={() => makeMove(cIdx)}
                 sx={{
-                  width: CELL_SIZE,
-                  height: CELL_SIZE,
+                  width: { xs: 25, sm: CELL_SIZE },
+                  height: { xs: 25, sm: CELL_SIZE },
                   m: CELL_MARGIN,
                   borderRadius: "50%",
                   backgroundColor: cell ? cell : "#fff",

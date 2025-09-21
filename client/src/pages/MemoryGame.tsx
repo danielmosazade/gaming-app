@@ -17,7 +17,6 @@ export default function MemoryGame({ onBackToMenu }: MemoryGameProps) {
   const [flippedCards, setFlippedCards] = useState<number[]>([]);
   const [moves, setMoves] = useState(0);
 
-  // יצירת חפיסת קלפים
   useEffect(() => {
     const values = ["🍎", "🍌", "🍇", "🍉", "🍒", "🥝"];
     const deck = [...values, ...values]
@@ -44,7 +43,6 @@ export default function MemoryGame({ onBackToMenu }: MemoryGameProps) {
     setFlippedCards((prev) => [...prev, id]);
   };
 
-  // בדיקת התאמה
   useEffect(() => {
     if (flippedCards.length === 2) {
       const [firstId, secondId] = flippedCards;
@@ -72,6 +70,7 @@ export default function MemoryGame({ onBackToMenu }: MemoryGameProps) {
           }, 1000);
         }
       }
+
       setMoves((m) => m + 1);
       setFlippedCards([]);
     }
@@ -79,16 +78,19 @@ export default function MemoryGame({ onBackToMenu }: MemoryGameProps) {
 
   const allMatched = cards.every((c) => c.isMatched);
 
+  // גודל קלף דינמי לפי רוחב המסך
+  const cardSize = Math.min(60, Math.floor(window.innerWidth / 6));
+
   return (
-    <Box display="flex" flexDirection="column" alignItems="center" gap={2} p={4}>
-      <Typography variant="h4">🎯 Memory Game</Typography>
-      <Typography>מהלכים: {moves}</Typography>
+    <Box display="flex" flexDirection="column" alignItems="center" gap={1} p={2}>
+      <Typography variant="h5" mb={1}>🎯 Memory Game</Typography>
+      <Typography mb={1}>מהלכים: {moves}</Typography>
 
       <Box
         sx={{
           display: "grid",
-          gridTemplateColumns: "repeat(4, 80px)", // 4 טורים
-          gap: 1,
+          gridTemplateColumns: `repeat(4, ${cardSize}px)`,
+          gap: 0.5,
           justifyContent: "center",
         }}
       >
@@ -97,14 +99,15 @@ export default function MemoryGame({ onBackToMenu }: MemoryGameProps) {
             key={card.id}
             onClick={() => !card.isFlipped && !card.isMatched && handleFlip(card.id)}
             sx={{
-              height: 30,
-              width: 30,
+              width: cardSize,
+              height: cardSize,
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
-              fontSize: 24,
+              fontSize: cardSize / 2,
               cursor: "pointer",
               backgroundColor: card.isFlipped || card.isMatched ? "white" : "grey.400",
+              transition: "0.3s",
             }}
           >
             {card.isFlipped || card.isMatched ? card.value : "❓"}
@@ -113,12 +116,12 @@ export default function MemoryGame({ onBackToMenu }: MemoryGameProps) {
       </Box>
 
       {allMatched && (
-        <Typography variant="h6" color="success.main">
+        <Typography variant="h6" color="success.main" mt={1}>
           🎉 כל הכרטיסים נחשפו! ניצחת!
         </Typography>
       )}
 
-      <Button variant="contained" color="secondary" onClick={onBackToMenu}>
+      <Button variant="contained" color="secondary" sx={{ mt: 1 }} onClick={onBackToMenu}>
         חזור לתפריט
       </Button>
     </Box>

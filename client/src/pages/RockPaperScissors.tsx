@@ -44,23 +44,26 @@ export default function RockPaperScissors({ onBackToMenu }: RPSProps) {
     setScore({ player: 0, computer: 0 });
   };
 
+  // גודל דינמי לכפתורים לפי רוחב המסך
+  const buttonSize = Math.min(70, Math.floor(window.innerWidth / 6));
+
   return (
-    <Box display="flex" flexDirection="column" alignItems="center" gap={1} p={4}>
-      <Typography variant="h4">Rock-Paper-Scissors</Typography>
+    <Box display="flex" flexDirection="column" alignItems="center" gap={1} p={2}>
+      <Typography variant="h5" mb={1}>Rock-Paper-Scissors</Typography>
       <Typography fontSize={14} color="text.secondary">
         בחר סמל והראה למחשב מי המנצח
       </Typography>
 
       {/* כפתורים עם אייקונים */}
-      <Box display="flex" gap={2} mt={2}>
+      <Box display="flex" gap={1.5} mt={1}>
         {choices.map((c) => (
           <Button
             key={c}
             onClick={() => playRound(c)}
             sx={{
-              fontSize: 30,
-              width: 60,
-              height: 60,
+              fontSize: buttonSize / 2,
+              width: buttonSize,
+              height: buttonSize,
               borderRadius: 2,
               transition: "transform 0.1s",
               "&:hover": { transform: "scale(1.2)" },
@@ -73,8 +76,8 @@ export default function RockPaperScissors({ onBackToMenu }: RPSProps) {
 
       {/* תוצאה */}
       {playerChoice && computerChoice && (
-        <Box textAlign="center" mt={2} display="flex" flexDirection="column" gap={1}>
-          <Typography fontSize={24}>
+        <Box textAlign="center" mt={1} display="flex" flexDirection="column" gap={0.5}>
+          <Typography fontSize={20}>
             שחקן: {playerChoice} | מחשב: {computerChoice}
           </Typography>
           <Typography variant="h6">{result}</Typography>
@@ -82,12 +85,12 @@ export default function RockPaperScissors({ onBackToMenu }: RPSProps) {
       )}
 
       {/* ניקוד */}
-      <Typography mt={1}>
+      <Typography mt={1} fontSize={14}>
         ניקוד – אתה: {score.player} | מחשב: {score.computer}
       </Typography>
 
       {/* כפתורים משחק חדש / חזרה */}
-      <Box display="flex" gap={2} mt={2}>
+      <Box display="flex" gap={1.5} mt={1}>
         <Button variant="contained" onClick={resetGame}>
           🔄 משחק חדש
         </Button>
