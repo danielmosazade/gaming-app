@@ -128,14 +128,14 @@ export default function GameMenu({ onBackToMenu }: GameMenuProps) {
 
       <Box
         display="grid"
-        gridTemplateColumns="repeat(auto-fill, minmax(70px, 1fr))" // יותר עמודות
-        gap={1} // פחות מרווח בין הכרטיסים
+        gridTemplateColumns="repeat(auto-fill, minmax(70px, 1fr))" 
+        gap={1} 
         width="100%"
         maxWidth={300}
-        maxHeight={400} // גובה קבוע
+        maxHeight={400}
         p={1}
         sx={{
-          overflowY: "auto", // גלילה אנכית
+          overflowY: "auto",
           overflowX: "hidden",
         }}
       >
@@ -169,11 +169,11 @@ export default function GameMenu({ onBackToMenu }: GameMenuProps) {
           color="primary"
           onClick={onBackToMenu}
           sx={{
-            mt: 2,
-            bgcolor: "#4ECDC4", // צבע טורקיז
+             mt: 0.5,
+            bgcolor: "#4ECDC4",
             color: "white",
             "&:hover": {
-              bgcolor: "#38b2ac", // כהה יותר בהובר
+              bgcolor: "#38b2ac", 
               transform: "scale(1.1)",
               boxShadow: 6,
             },

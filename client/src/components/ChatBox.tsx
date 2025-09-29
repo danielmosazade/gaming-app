@@ -3,7 +3,7 @@ import { io, Socket } from "socket.io-client";
 import { Box, Paper, TextField, Button, Typography } from "@mui/material";
 
 // חיבור לסוקט
-const socket: Socket = io("http://localhost:5000");
+const socket: Socket = io(import.meta.env.VITE_SERVER_URL || "http://localhost:5000");
 
 interface Message {
   id: string;

@@ -18,7 +18,7 @@ function TicTacToe({ onBackToMenu }: TicTacToeProps) {
 
   // חיבור ל-socket
   useEffect(() => {
-    socket = io("http://localhost:5000");
+    socket = io(import.meta.env.VITE_SERVER_URL || "http://localhost:5000");
 
     socket.on("move_made", (data: { index: number; player: "X" | "O" }) => {
       setBoard((prevBoard) => {
