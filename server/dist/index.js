@@ -15,7 +15,7 @@ const DotsAndBoxes_1 = require("./socket/DotsAndBoxes");
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const server = http_1.default.createServer(app);
-const PORT = Number(process.env.PORT) || 5000;
+const PORT = Number(process.env.PORT) || 10000;
 const io = new socket_io_1.Server(server, {
     cors: {
         origin: process.env.CLIENT_URL || "http://localhost:5173",
