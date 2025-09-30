@@ -20,6 +20,10 @@ function TicTacToe({ onBackToMenu }: TicTacToeProps) {
   useEffect(() => {
     socket = io(import.meta.env.VITE_SERVER_URL || "http://localhost:5000");
 
+    socket.on("connect_error", (error) => {
+      console.error("❌ TicTacToe socket connection error:", error);
+    });
+
     socket.on("move_made", (data: { index: number; player: "X" | "O" }) => {
       setBoard((prevBoard) => {
         const newBoard = [...prevBoard];
@@ -37,8 +41,6 @@ function TicTacToe({ onBackToMenu }: TicTacToeProps) {
     socket.on("game_reset", () => {
       resetGame();
     });
-   
-
 
     return () => {
       socket.disconnect();

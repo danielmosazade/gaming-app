@@ -4,7 +4,6 @@ export default function Footer() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
-  // הגדרות מותאמות למובייל
   const py = isMobile ? 2 : 4;
   const fontSizeTitle = isMobile ? "1rem" : "1.2rem";
   const fontSizeSub = isMobile ? "0.7rem" : "0.85rem";
@@ -15,7 +14,8 @@ export default function Footer() {
     <Box
       component="footer"
       sx={{
-        mt: 4,
+        mt: "auto", // דוחף את הפוטר לסוף הדף
+        mb: "1cm", // רווח לפני סוף המסך
         py,
         px: 2,
         position: "relative",
@@ -64,7 +64,6 @@ export default function Footer() {
         }}
       />
 
-      {/* כותרת */}
       <Typography
         variant="h6"
         sx={{
@@ -84,7 +83,6 @@ export default function Footer() {
         © {new Date().getFullYear()} Your Game App
       </Typography>
 
-      {/* כותרת משנה */}
       <Typography
         variant="body2"
         sx={{

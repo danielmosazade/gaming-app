@@ -27,6 +27,10 @@ const ChatBox = () => {
       console.log("✅ Connected to server:", socket.id);
     });
 
+    socket.on("connect_error", (error) => {
+      console.error("❌ Socket connection error:", error);
+    });
+
     socket.on("receive_message", (msg: Message) => {
       if (msg && typeof msg.text === "string") {
         setChat((prev) => [...prev, msg]);
@@ -35,6 +39,7 @@ const ChatBox = () => {
 
     return () => {
       socket.off("connect");
+      socket.off("connect_error");
       socket.off("receive_message");
     };
   }, []);

@@ -118,6 +118,43 @@ export default function Game2048({ onBackToMenu }: Game2048Props) {
     setScore(0);
     setGameOver(false);
   };
+  // support mobile touch
+    useEffect(() => {
+    let startX = 0;
+    let startY = 0;
+
+    const handleTouchStart = (e: TouchEvent) => {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+    };
+
+    const handleTouchEnd = (e: TouchEvent) => {
+      if (gameOver) return;
+      const endX = e.changedTouches[0].clientX;
+      const endY = e.changedTouches[0].clientY;
+
+      const dx = endX - startX;
+      const dy = endY - startY;
+
+      // בודקים איזה כיוון החלקה יותר חזק
+      if (Math.abs(dx) > Math.abs(dy)) {
+        if (dx > 30) move("right");
+        else if (dx < -30) move("left");
+      } else {
+        if (dy > 30) move("down");
+        else if (dy < -30) move("up");
+      }
+    };
+
+    window.addEventListener("touchstart", handleTouchStart);
+    window.addEventListener("touchend", handleTouchEnd);
+
+    return () => {
+      window.removeEventListener("touchstart", handleTouchStart);
+      window.removeEventListener("touchend", handleTouchEnd);
+    };
+  }, [grid, gameOver]);
+
 
   return (
     <Box
