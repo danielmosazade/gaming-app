@@ -1,0 +1,100 @@
+import { Box, Paper, Slide, Fade } from "@mui/material";
+import WelcomeCard from "../components/StartGame";
+import ChatBox from "../components/ChatBox";
+import GameMenu from "../components/GameMenu";
+import { useState } from "react";
+
+const HomePage = () => {
+  const [started, setStarted] = useState<boolean>(false);
+
+  return (
+    <div>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: { xs: "column", md: "row" },
+          gap: 4,
+        }}
+      >
+        <Slide direction="right" in={!started} mountOnEnter unmountOnExit>
+          <Fade in={!started} timeout={500}>
+            <Paper
+              elevation={6}
+              sx={{
+                flex: 1,
+                p: 3,
+                borderRadius: 3,
+                bgcolor: "white",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                minHeight: 300,
+                overflow: "hidden",
+                transition: "transform 0.3s, box-shadow 0.3s",
+                "&:hover": {
+                  transform: "translateY(-5px)",
+                  boxShadow: 12,
+                },
+              }}
+            >
+              <WelcomeCard onStart={() => setStarted(true)} />
+            </Paper>
+          </Fade>
+        </Slide>
+
+        <Slide direction="right" in={started} mountOnEnter unmountOnExit>
+          <Fade in={started} timeout={500}>
+            <Paper
+              elevation={6}
+              sx={{
+                flex: 1,
+                p: 3,
+                borderRadius: 3,
+                bgcolor: "white",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                minHeight: 300,
+                overflow: "hidden",
+                transition: "transform 0.3s, box-shadow 0.3s",
+                "&:hover": {
+                  transform: "translateY(-5px)",
+                  boxShadow: 12,
+                },
+              }}
+            >
+              <GameMenu onBackToMenu={() => setStarted(false)} />
+            </Paper>
+          </Fade>
+        </Slide>
+
+        {/* צד ימין - Chat */}
+        <Slide direction="left" in={true} mountOnEnter>
+          <Fade in={true} timeout={700}>
+            <Paper
+              elevation={6}
+              sx={{
+                flex: 1,
+                p: 3,
+                borderRadius: 3,
+                bgcolor: "white",
+                display: "flex",
+                flexDirection: "column",
+                minHeight: 300,
+                transition: "transform 0.3s, box-shadow 0.3s",
+                "&:hover": {
+                  transform: "translateY(-5px)",
+                  boxShadow: 12,
+                },
+              }}
+            >
+              <ChatBox />
+            </Paper>
+          </Fade>
+        </Slide>
+      </Box>
+    </div>
+  );
+};
+
+export default HomePage;
