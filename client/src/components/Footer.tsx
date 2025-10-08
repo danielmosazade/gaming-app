@@ -93,7 +93,7 @@ export default function Footer() {
           fontSize: fontSizeSub,
         }}
       >
-        Built with ❤️ by Daniel
+        Built with ❤️ by Daniel mosazade
       </Typography>
     </Box>
   );
