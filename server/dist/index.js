@@ -16,26 +16,32 @@ dotenv_1.default.config();
 const app = (0, express_1.default)();
 const server = http_1.default.createServer(app);
 const PORT = Number(process.env.PORT) || 10000;
+// 🧩 חשוב מאוד – תגדיר במפורש את ה-origin של ה-Frontend שלך
 const io = new socket_io_1.Server(server, {
     cors: {
-        origin: process.env.CLIENT_URL || "http://localhost:5173",
+        origin: process.env.CLIENT_URL || "https://gaming-hub2.netlify.app",
         methods: ["GET", "POST"],
+        credentials: true, // מוסיף אמינות לחיבורים חוצי דומיינים
     },
 });
-app.use((0, cors_1.default)());
+app.use((0, cors_1.default)({
+    origin: process.env.CLIENT_URL || "https://gaming-hub2.netlify.app",
+    methods: ["GET", "POST"],
+    credentials: true,
+}));
 app.get("/", (_req, res) => {
     res.send("server is running");
 });
 io.on("connection", (socket) => {
-    console.log("User connected:", socket.id);
+    console.log("✅ User connected:", socket.id);
     (0, Chat_1.handleChat)(socket, io);
     (0, TicTacToe_1.handleTicTacToe)(socket, io);
     (0, Connect4_1.handleConnect4)(socket, io);
     (0, DotsAndBoxes_1.handleDotsAndBoxes)(socket, io);
     socket.on("disconnect", () => {
-        console.log("User disconnected:", socket.id);
+        console.log("❌ User disconnected:", socket.id);
     });
 });
 server.listen(PORT, () => {
-    console.log(`server running on http://localhost:${PORT}`);
+    console.log(`🚀 Server running on port ${PORT}`);
 });

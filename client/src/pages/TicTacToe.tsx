@@ -18,7 +18,9 @@ function TicTacToe({ onBackToMenu }: TicTacToeProps) {
 
   // חיבור ל-socket
   useEffect(() => {
-    socket = io(import.meta.env.VITE_SERVER_URL );
+    socket = io(import.meta.env.VITE_SERVER_URL,{
+  transports: ["websocket"],
+} );
 
     socket.on("connect_error", (error) => {
       console.error("❌ TicTacToe socket connection error:", error);

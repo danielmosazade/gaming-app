@@ -14,7 +14,9 @@ const COLS = 6;
 const CELL_SIZE = 35; // קטן יותר
 const CELL_MARGIN = 1;
 
-const socket: Socket = io(import.meta.env.VITE_SERVER_URL);
+const socket: Socket = io(import.meta.env.VITE_SERVER_URL,{
+  transports: ["websocket"],
+});
 
 const Connect4 = ({ onBackToMenu }: Connect4Props) => {
   const initialBoard: Cell[][] = Array.from({ length: ROWS }, () => Array(COLS).fill(null));

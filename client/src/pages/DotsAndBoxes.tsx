@@ -22,7 +22,9 @@ export default function DotsAndBoxes({ onBackToMenu }: DotsAndBoxesProps) {
   const socketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
-    socketRef.current = io(import.meta.env.VITE_SERVER_URL );
+    socketRef.current = io(import.meta.env.VITE_SERVER_URL,{
+  transports: ["websocket"],
+} );
     socketRef.current.on("dots_update_board", (data: { lineKey: string; player: 1 | 2 }) => {
       handleLineClick(data.lineKey, false);
     });
