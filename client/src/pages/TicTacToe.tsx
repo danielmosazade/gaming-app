@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Box, Button, Typography, TextField } from "@mui/material";
+import { Box, Button, Typography, TextField, Snackbar } from "@mui/material";
 import { io, Socket } from "socket.io-client";
 import { calculateGameResult } from "../components/CalculateGameResult";
 
@@ -18,6 +18,9 @@ export default function TicTacToe({ onBackToMenu }: TicTacToeProps) {
   const [playerSymbol, setPlayerSymbol] = useState<Player>(null);
   const [joinedRoom, setJoinedRoom] = useState(false);
   const [inputCode, setInputCode] = useState("");
+  const [gameStarted, setGameStarted] = useState(false);
+  const [toastOpen, setToastOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
 
   const socketRef = useRef<Socket | null>(null);
 
@@ -34,7 +37,7 @@ export default function TicTacToe({ onBackToMenu }: TicTacToeProps) {
     const socket = socketRef.current;
 
     socket.on("connect_error", (err) => console.error("Socket Error:", err));
-console.log("📡 Server URL:", import.meta.env.VITE_SERVER_URL);
+    console.log("📡 Server URL:", import.meta.env.VITE_SERVER_URL);
     socket.on("room_created", (code: string) => {
       setPlayerSymbol("X");
       setRoomCode(code);
@@ -50,9 +53,12 @@ console.log("📡 Server URL:", import.meta.env.VITE_SERVER_URL);
     socket.on("room_exists", () => alert("חדר כבר קיים!"));
     socket.on("room_not_found", () => alert("החדר לא נמצא!"));
     socket.on("room_full", () => alert("החדר מלא!"));
-    socket.on("both_players_joined", () =>
-      console.log("שני השחקנים בחדר, המשחק מתחיל!")
-    );
+    socket.on("both_players_joined", () => {
+      setGameStarted(true);
+      setToastMessage("שחקן הצטרף! המשחק מתחיל!");
+      setToastOpen(true);
+      console.log("שני השחקנים בחדר, המשחק מתחיל!");
+    });
 
     socket.on(
       "move_made",
@@ -78,7 +84,7 @@ console.log("📡 Server URL:", import.meta.env.VITE_SERVER_URL);
   }, []);
 
   const handleClick = (index: number) => {
-    if (board[index] || winner || isDraw || !joinedRoom) return;
+    if (board[index] || winner || isDraw || !joinedRoom || !gameStarted) return;
     // רק אם זה התור שלך לפי מה שמגיע מהשרת
     if (playerSymbol !== (xIsNext ? "X" : "O")) return;
     socketRef.current?.emit("tic_move", {
@@ -91,14 +97,14 @@ console.log("📡 Server URL:", import.meta.env.VITE_SERVER_URL);
   const createRoom = () => {
     const code = Math.random().toString(36).substring(2, 7).toUpperCase();
     console.log("מבקש ליצור חדר:", code);
-    
-if (socketRef.current?.connected) {
-  socketRef.current.emit("create_room", code);
-} else {
-  socketRef.current?.once("connect", () => {
-    socketRef.current?.emit("create_room", code);
-  });
-}
+
+    if (socketRef.current?.connected) {
+      socketRef.current.emit("create_room", code);
+    } else {
+      socketRef.current?.once("connect", () => {
+        socketRef.current?.emit("create_room", code);
+      });
+    }
   };
 
   const joinRoom = () => {
@@ -119,10 +125,15 @@ if (socketRef.current?.connected) {
     resetGame();
   };
 
+  const isMyTurn = playerSymbol === (xIsNext ? "X" : "O");
+
   const renderSquare = (index: number) => (
     <Button
       key={index}
       variant="outlined"
+      disabled={
+        !isMyTurn || board[index] !== null || !!winner || isDraw || !gameStarted
+      }
       sx={{
         width: 60,
         height: 60,
@@ -131,7 +142,14 @@ if (socketRef.current?.connected) {
         padding: 0,
         border: "2px solid #333",
         backgroundColor: board[index] ? "#f5f5f5" : "white",
-        "&:hover": { backgroundColor: "#e0e0e0" },
+        "&:hover": {
+          backgroundColor:
+            isMyTurn && !board[index] && gameStarted ? "#e0e0e0" : "white",
+        },
+        "&.Mui-disabled": {
+          backgroundColor: "#f0f0f0",
+          color: "#999",
+        },
       }}
       onClick={() => handleClick(index)}
     >
@@ -180,6 +198,10 @@ if (socketRef.current?.connected) {
 
   return (
     <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
+      <Typography variant="h6" sx={{ mt: 1 }}>
+        אתה {playerSymbol === "X" ? "❌" : "⭕"}
+      </Typography>
+
       <Box display="grid" gridTemplateColumns="repeat(3, 1fr)" gap={1}>
         {board.map((_, i) => renderSquare(i))}
       </Box>
@@ -206,18 +228,26 @@ if (socketRef.current?.connected) {
           חזור
         </Button>
       </Box>
+      <Box display="flex" flexDirection="row" alignItems="center" gap={2}>
+        {(winner || isDraw) && (
+          <Typography variant="h6" color="secondary">
+            {winner ? `🎉 מנצח: ${winner}` : "🤝 תיקו!"}
+          </Typography>
+        )}
 
-      {(winner || isDraw) && (
-        <Typography variant="h6" color="secondary" mt={2}>
-          {winner ? `🎉 מנצח: ${winner}` : "🤝 תיקו!"}
-        </Typography>
-      )}
-
-      {(winner || isDraw) && (
-        <Button variant="contained" onClick={sendReset}>
-          משחק חדש
-        </Button>
-      )}
+        {(winner || isDraw) && (
+          <Button variant="contained" onClick={sendReset}>
+            משחק חדש
+          </Button>
+        )}
+      </Box>
+      <Snackbar
+        open={toastOpen}
+        autoHideDuration={3000}
+        onClose={() => setToastOpen(false)}
+        message={toastMessage}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }} // מיקום
+      />
     </Box>
   );
 }
