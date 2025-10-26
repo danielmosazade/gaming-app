@@ -24,6 +24,7 @@ const io = new Server(server, {
   },
 });
 
+
 app.use(
   cors({
     origin: process.env.CLIENT_URL || "https://gaming-hub2.netlify.app",
@@ -46,6 +47,7 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     console.log("❌ User disconnected:", socket.id);
   });
+  
 });
 
 server.listen(PORT, () => {

@@ -1,16 +1,89 @@
 import { Server, Socket } from "socket.io";
 
+interface Room {
+  players: string[]; // ids של סוקט
+  nextPlayer: "X" | "O";
+}
+
+const rooms: Record<string, Room> = {};
+
 export function handleTicTacToe(socket: Socket, io: Server) {
-  socket.on("tic_move", (data: { index: number; player: "X" | "O" }) => {
-    console.log(`TicTacToe move from ${socket.id}:`, data);
-    socket.broadcast.emit("tic_update_board", data);
+  console.log("🎮 TicTacToe Socket connected:", socket.id);
+
+  // יצירת חדר
+  socket.on("create_room", (code: string) => {
+      
+
+      console.log("קיבל בקשה ליצור חדר:", code);
+
+    if (!rooms[code]) {
+      rooms[code] = { players: [socket.id], nextPlayer: "X" };
+      socket.join(code);
+      socket.emit("room_created", code);
+      console.log(`📌 חדר נוצר: ${code}`);
+    } else {
+      socket.emit("room_exists", code);
+    }
   });
 
-  socket.on("tic_reset", () => {
-    io.emit("tic_game_reset");
+  // הצטרפות לחדר
+  socket.on("join_room", (code: string) => {
+    const room = rooms[code];
+    if (!room) {
+      socket.emit("room_not_found", code);
+      return;
+    }
+    if (room.players.length >= 2) {
+      socket.emit("room_full", code);
+      return;
+    }
+
+    room.players.push(socket.id);
+    socket.join(code);
+
+    socket.emit("joined_room", code);
+    io.to(code).emit("both_players_joined");
+
+    console.log(`🙋 שחקן הצטרף לחדר: ${code}`);
   });
 
-  socket.on("tic_winner", (player: "X" | "O") => {
-    io.emit("tic_winner_declared", player);
+  // מהלך בחדר
+  socket.on("tic_move", (data: { index: number; player: "X" | "O"; room: string }) => {
+    const room = rooms[data.room];
+    if (!room) return;
+
+    // בדיקה אם זה התור הנכון
+    if (data.player !== room.nextPlayer) return;
+
+    // עדכון לוח ושינוי תור
+    room.nextPlayer = room.nextPlayer === "X" ? "O" : "X";
+
+    io.to(data.room).emit("move_made", {
+      index: data.index,
+      player: data.player,
+      nextPlayer: room.nextPlayer,
+    });
+  });
+
+  // איפוס המשחק
+  socket.on("reset_game", (roomCode: string) => {
+    const room = rooms[roomCode];
+    if (!room) return;
+
+    room.nextPlayer = "X";
+    io.to(roomCode).emit("game_reset");
+  });
+
+  // ניתוק שחקן
+  socket.on("disconnect", () => {
+    for (const code in rooms) {
+      const room = rooms[code];
+      const idx = room.players.indexOf(socket.id);
+      if (idx !== -1) {
+        room.players.splice(idx, 1);
+        if (room.players.length === 0) delete rooms[code];
+      }
+    }
+    console.log("❌ Socket disconnected:", socket.id);
   });
 }

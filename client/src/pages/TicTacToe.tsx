@@ -1,73 +1,112 @@
-import { Box, Button, Typography } from "@mui/material";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { Box, Button, Typography, TextField } from "@mui/material";
 import { io, Socket } from "socket.io-client";
 import { calculateGameResult } from "../components/CalculateGameResult";
 
 type Player = "X" | "O" | null;
-let socket: Socket;
 
 interface TicTacToeProps {
   onBackToMenu: () => void;
 }
 
-function TicTacToe({ onBackToMenu }: TicTacToeProps) {
+export default function TicTacToe({ onBackToMenu }: TicTacToeProps) {
   const [board, setBoard] = useState<Player[]>(Array(9).fill(null));
-  const [xIsNext, setXIsNext] = useState<boolean>(true);
+  const [xIsNext, setXIsNext] = useState(true);
   const [winner, setWinner] = useState<Player>(null);
-  const [isDraw, setIsDraw] = useState<boolean>(false);
+  const [isDraw, setIsDraw] = useState(false);
+  const [roomCode, setRoomCode] = useState("");
+  const [playerSymbol, setPlayerSymbol] = useState<Player>(null);
+  const [joinedRoom, setJoinedRoom] = useState(false);
+  const [inputCode, setInputCode] = useState("");
 
-  // חיבור ל-socket
+  const socketRef = useRef<Socket | null>(null);
+
   useEffect(() => {
-    socket = io(import.meta.env.VITE_SERVER_URL,{
-  transports: ["websocket"],
-} );
+    if (!socketRef.current) {
+      socketRef.current = io(
+        import.meta.env.VITE_SERVER_URL || "http://localhost:10000",
+        {
+          transports: ["websocket", "polling"],
+        }
+      );
+    }
 
-    socket.on("connect_error", (error) => {
-      console.error("❌ TicTacToe socket connection error:", error);
+    const socket = socketRef.current;
+
+    socket.on("connect_error", (err) => console.error("Socket Error:", err));
+console.log("📡 Server URL:", import.meta.env.VITE_SERVER_URL);
+    socket.on("room_created", (code: string) => {
+      setPlayerSymbol("X");
+      setRoomCode(code);
+      setJoinedRoom(true);
     });
 
-    socket.on("move_made", (data: { index: number; player: "X" | "O" }) => {
-      setBoard((prevBoard) => {
-        const newBoard = [...prevBoard];
-        newBoard[data.index] = data.player;
-
-        const result = calculateGameResult(newBoard);
-        setWinner(result.winner);
-        setIsDraw(result.isDraw);
-
-        setXIsNext(data.player === "X" ? false : true);
-        return newBoard;
-      });
+    socket.on("joined_room", (code: string) => {
+      setPlayerSymbol("O");
+      setRoomCode(code);
+      setJoinedRoom(true);
     });
 
-    socket.on("game_reset", () => {
-      resetGame();
-    });
+    socket.on("room_exists", () => alert("חדר כבר קיים!"));
+    socket.on("room_not_found", () => alert("החדר לא נמצא!"));
+    socket.on("room_full", () => alert("החדר מלא!"));
+    socket.on("both_players_joined", () =>
+      console.log("שני השחקנים בחדר, המשחק מתחיל!")
+    );
+
+    socket.on(
+      "move_made",
+      (data: { index: number; player: Player; nextPlayer: Player }) => {
+        setBoard((prev) => {
+          const newBoard = [...prev];
+          newBoard[data.index] = data.player;
+          const result = calculateGameResult(newBoard);
+          setWinner(result.winner);
+          setIsDraw(result.isDraw);
+          setXIsNext(data.nextPlayer === "X");
+          return newBoard;
+        });
+      }
+    );
+
+    socket.on("game_reset", () => resetGame());
 
     return () => {
       socket.disconnect();
+      socketRef.current = null;
     };
   }, []);
 
-  // טיפול בלחיצה על תא
   const handleClick = (index: number) => {
-    if (board[index] || winner || isDraw) return;
-
-    const player = xIsNext ? "X" : "O";
-    const newBoard = [...board];
-    newBoard[index] = player;
-    setBoard(newBoard);
-
-    const result = calculateGameResult(newBoard);
-    setWinner(result.winner);
-    setIsDraw(result.isDraw);
-
-    setXIsNext(!xIsNext);
-
-    socket.emit("tic_move", { index, player });
+    if (board[index] || winner || isDraw || !joinedRoom) return;
+    // רק אם זה התור שלך לפי מה שמגיע מהשרת
+    if (playerSymbol !== (xIsNext ? "X" : "O")) return;
+    socketRef.current?.emit("tic_move", {
+      index,
+      player: playerSymbol,
+      room: roomCode,
+    });
   };
 
-  // אתחול המשחק
+  const createRoom = () => {
+    const code = Math.random().toString(36).substring(2, 7).toUpperCase();
+    console.log("מבקש ליצור חדר:", code);
+    
+if (socketRef.current?.connected) {
+  socketRef.current.emit("create_room", code);
+} else {
+  socketRef.current?.once("connect", () => {
+    socketRef.current?.emit("create_room", code);
+  });
+}
+  };
+
+  const joinRoom = () => {
+    if (!inputCode) return;
+    const code = inputCode.toUpperCase();
+    socketRef.current?.emit("join_room", code);
+  };
+
   const resetGame = () => {
     setBoard(Array(9).fill(null));
     setXIsNext(true);
@@ -76,7 +115,7 @@ function TicTacToe({ onBackToMenu }: TicTacToeProps) {
   };
 
   const sendReset = () => {
-    socket.emit("reset_game");
+    socketRef.current?.emit("reset_game", roomCode);
     resetGame();
   };
 
@@ -84,50 +123,101 @@ function TicTacToe({ onBackToMenu }: TicTacToeProps) {
     <Button
       key={index}
       variant="outlined"
-      sx={{ width: 60, height: 60, fontSize: 24, minWidth: 0 }}
+      sx={{
+        width: 60,
+        height: 60,
+        fontSize: 20,
+        minWidth: 0,
+        padding: 0,
+        border: "2px solid #333",
+        backgroundColor: board[index] ? "#f5f5f5" : "white",
+        "&:hover": { backgroundColor: "#e0e0e0" },
+      }}
       onClick={() => handleClick(index)}
     >
       {board[index]}
     </Button>
   );
 
+  if (!joinedRoom) {
+    return (
+      <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
+        <Typography variant="h5" mb={2}>
+          איקס עיגול אונליין 🎮
+        </Typography>
+
+        <Button variant="contained" onClick={createRoom}>
+          צור חדר חדש
+        </Button>
+
+        <Box display="flex" gap={1} alignItems="center">
+          <TextField
+            size="small"
+            placeholder="קוד חדר"
+            value={inputCode}
+            onChange={(e) => setInputCode(e.target.value)}
+          />
+          <Button variant="outlined" onClick={joinRoom}>
+            הצטרף
+          </Button>
+        </Box>
+
+        <Button
+          variant="contained"
+          sx={{
+            backgroundColor: "#ff4d4d",
+            color: "white",
+            borderRadius: "20px",
+            "&:hover": { backgroundColor: "#ff1a1a" },
+          }}
+          onClick={onBackToMenu}
+        >
+          חזור
+        </Button>
+      </Box>
+    );
+  }
+
   return (
     <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
-      {/* לוח המשחק */}
       <Box display="grid" gridTemplateColumns="repeat(3, 1fr)" gap={1}>
         {board.map((_, i) => renderSquare(i))}
       </Box>
 
-      {/* הודעות תור / מנצח / תיקו */}
-      <Box mt={2} textAlign="center">
-        {winner ? (
-          <Typography variant="h6" color="secondary">
-            🎉 Winner: {winner}
-          </Typography>
-        ) : isDraw ? (
-          <Typography variant="h6" color="warning.main">
-            🤝 It's a Draw!
-          </Typography>
-        ) : (
-          <Typography variant="h6">
-            Next: {xIsNext ? "X" : "O"}
-          </Typography>
-        )}
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+        width="280px"
+        sx={{ mt: 2 }}
+      >
+        <Typography variant="body1">🧾 {roomCode}</Typography>
+        <Typography variant="body1">תור: {xIsNext ? "X" : "O"}</Typography>
+        <Button
+          variant="contained"
+          sx={{
+            backgroundColor: "#ff4d4d",
+            color: "white",
+            borderRadius: "20px",
+            "&:hover": { backgroundColor: "#ff1a1a" },
+          }}
+          onClick={onBackToMenu}
+        >
+          חזור
+        </Button>
       </Box>
 
-      {/* כפתורים בסיום המשחק */}
-      {(winner !== null || isDraw) && (
-        <Box display="flex" gap={2} mt={2}>
-          <Button variant="contained" color="primary" onClick={sendReset}>
-            משחק חדש
-          </Button>
-          <Button variant="outlined" color="secondary" onClick={onBackToMenu}>
-            חזור לתפריט
-          </Button>
-        </Box>
+      {(winner || isDraw) && (
+        <Typography variant="h6" color="secondary" mt={2}>
+          {winner ? `🎉 מנצח: ${winner}` : "🤝 תיקו!"}
+        </Typography>
+      )}
+
+      {(winner || isDraw) && (
+        <Button variant="contained" onClick={sendReset}>
+          משחק חדש
+        </Button>
       )}
     </Box>
   );
 }
-
-export default TicTacToe;
