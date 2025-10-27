@@ -77,6 +77,14 @@ export default function TicTacToe({ onBackToMenu }: TicTacToeProps) {
 
     socket.on("game_reset", () => resetGame());
 
+    socket.on("opponent_disconnected", (message: string) => {
+      setToastMessage(message);
+      setToastOpen(true);
+      setTimeout(() => {
+        onBackToMenu();
+      }, 3000);
+    });
+
     return () => {
       socket.disconnect();
       socketRef.current = null;

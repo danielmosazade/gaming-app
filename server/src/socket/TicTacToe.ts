@@ -80,8 +80,21 @@ export function handleTicTacToe(socket: Socket, io: Server) {
       const room = rooms[code];
       const idx = room.players.indexOf(socket.id);
       if (idx !== -1) {
+        const wasTwoPlayers = room.players.length === 2;
         room.players.splice(idx, 1);
-        if (room.players.length === 0) delete rooms[code];
+        if (room.players.length === 1 && wasTwoPlayers) {
+          // הודעה לשחקן הנותר והתנתקות לאחר 3 שניות
+          const remainingSocketId = room.players[0];
+          io.to(remainingSocketId).emit("opponent_disconnected", "היריב התנתק! המשחק יסתיים בעוד 3 שניות.");
+          setTimeout(() => {
+            const remainingSocket = io.sockets.sockets.get(remainingSocketId);
+            if (remainingSocket) {
+              remainingSocket.disconnect();
+            }
+          }, 3000);
+        } else if (room.players.length === 0) {
+          delete rooms[code];
+        }
       }
     }
     console.log("❌ Socket disconnected:", socket.id);
