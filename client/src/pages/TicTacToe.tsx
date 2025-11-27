@@ -23,7 +23,6 @@ export default function TicTacToe({ onBackToMenu }: TicTacToeProps) {
   const [toastMessage, setToastMessage] = useState("");
 
   const socketRef = useRef<Socket | null>(null);
-
   useEffect(() => {
     if (!socketRef.current) {
       socketRef.current = io(

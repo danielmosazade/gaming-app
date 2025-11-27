@@ -3,14 +3,14 @@ import { io, Socket } from "socket.io-client";
 import { Box, Paper, TextField, Button, Typography } from "@mui/material";
 
 // חיבור לסוקט
-const socket: Socket = io(import.meta.env.VITE_SERVER_URL,{
+const socket: Socket = io(import.meta.env.VITE_SERVER_URL, {
   transports: ["websocket"],
-} );
+});
 
 interface Message {
   id: string;
   text: string;
-  senderId?: string; 
+  senderId?: string;
   time?: string;
 }
 
@@ -99,7 +99,15 @@ const ChatBox = () => {
               <Typography variant="caption" sx={{ opacity: 0.7 }}>
                 {msg.senderId === socket.id ? "אתה" : "שחקן אחר"} • {msg.time}
               </Typography>
-              <Typography variant="body1">{msg.text}</Typography>
+              <Typography
+                variant="body1"
+                sx={{
+                  whiteSpace: "pre-wrap",
+                  wordBreak: "break-word",
+                }}
+              >
+                {msg.text}
+              </Typography>
             </Paper>
           </Box>
         ))}
